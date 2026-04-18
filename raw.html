@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Raw Script</title>
+</head>
+<body style="margin:0;padding:20px;font-family:monospace;background:white;color:black;">
+
+<script>
+let scripts = JSON.parse(localStorage.getItem("rbx_scripts")) || [];
+let params = new URLSearchParams(window.location.search);
+let id = params.get("id");
+
+let script = scripts.find(s => s.id === id);
+
+if(script){
+document.body.innerText = script.code;
+}else{
+document.body.innerText = "Script not found.";
+}
+</script>
+
+</body>
+</html>
