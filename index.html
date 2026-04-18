@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RbxVault</title>
+<title>RbxVault Pro</title>
 
 <link rel="stylesheet"
 href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
@@ -13,7 +13,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-d
 <style>
 body{
 margin:0;
-font-family:Segoe UI,Arial;
+font-family:Segoe UI;
 background:linear-gradient(135deg,#0f172a,#1e293b);
 color:white;
 }
@@ -23,21 +23,16 @@ display:flex;
 justify-content:space-between;
 align-items:center;
 padding:15px 20px;
-background:rgba(0,0,0,0.3);
+background:rgba(0,0,0,0.4);
 backdrop-filter:blur(10px);
 position:sticky;
 top:0;
+z-index:1000;
 }
 
-.logo{
-font-size:20px;
-font-weight:bold;
-}
+.logo{font-weight:bold;font-size:20px;}
 
-.menu-toggle{
-font-size:24px;
-cursor:pointer;
-}
+.menu-toggle{font-size:24px;cursor:pointer;}
 
 .menu{
 display:none;
@@ -48,7 +43,7 @@ top:60px;
 background:#1e293b;
 padding:15px;
 border-radius:10px;
-box-shadow:0 0 15px black;
+box-shadow:0 0 20px black;
 }
 
 .menu a{
@@ -103,7 +98,7 @@ overflow:auto;
 .footer{
 text-align:center;
 margin-top:40px;
-opacity:0.6;
+opacity:0.5;
 }
 </style>
 </head>
@@ -124,7 +119,7 @@ opacity:0.6;
 <div class="container" id="app"></div>
 
 <div class="footer">
-RbxVault © 2026
+RbxVault Pro © 2026
 </div>
 
 <script>
@@ -145,12 +140,16 @@ function generateId(){
 return Math.random().toString(36).substring(2,10);
 }
 
-/* ROUTER CLEAN URL */
+/* ✅ FIXED RAW ROUTER FOR GITHUB PAGES */
+const repoBase = location.pathname.split("/raw/")[0];
+
 if(location.pathname.includes("/raw/")){
 let id=location.pathname.split("/raw/")[1];
 let script=scripts.find(s=>s.id===id);
+
 document.body.innerHTML="";
 document.body.style="background:white;color:black;padding:20px;font-family:monospace;";
+
 document.body.innerText=script?script.code:"Script not found";
 }else{
 showHome();
@@ -163,6 +162,8 @@ document.getElementById("app").innerHTML=`
 <input id="title" placeholder="Script title">
 <textarea id="code" placeholder="Paste Lua script..."></textarea>
 <button onclick="publish()">Publish</button>
+<button onclick="exportData()">Export JSON</button>
+<input type="file" onchange="importData(event)">
 </div>
 
 <div class="card">
@@ -187,15 +188,14 @@ function showInfo(){
 document.getElementById("app").innerHTML=`
 <div class="card">
 <h2>Info</h2>
-<p>RbxVault adalah platform penyimpanan script Roblox modern.</p>
-<p>Fitur:</p>
+<p>Modern Roblox script storage website.</p>
 <ul>
-<li>Raw URL</li>
-<li>Copy Script</li>
-<li>Download .lua</li>
-<li>View Counter</li>
-<li>Search</li>
-<li>Mobile Friendly</li>
+<li>Clean RAW URL</li>
+<li>Copy / Download</li>
+<li>Search system</li>
+<li>View counter</li>
+<li>Export / Import</li>
+<li>100% Static GitHub Pages</li>
 </ul>
 </div>`;
 }
@@ -205,8 +205,7 @@ document.getElementById("app").innerHTML=`
 <div class="card">
 <h2>Credit</h2>
 <p>Developer: Kamu 😎</p>
-<p>UI Powered by Vanilla JS</p>
-<p>Syntax Highlight by Highlight.js</p>
+<p>Powered by Vanilla JavaScript</p>
 </div>`;
 }
 
@@ -246,7 +245,11 @@ hljs.highlightAll();
 function openRaw(id){
 views[id]=(views[id]||0)+1;
 saveLocal();
-window.open("/raw/"+id);
+
+let base = location.pathname.split("/raw/")[0];
+if(!base.endsWith("/")) base += "/";
+
+window.open(base+"raw/"+id,"_blank");
 }
 
 function copyCode(code){
@@ -274,6 +277,25 @@ let input=document.getElementById("search").value.toLowerCase();
 document.querySelectorAll(".card").forEach(card=>{
 card.style.display=card.innerText.toLowerCase().includes(input)?"block":"none";
 });
+}
+
+function exportData(){
+let blob=new Blob([JSON.stringify(scripts)],{type:"application/json"});
+let a=document.createElement("a");
+a.href=URL.createObjectURL(blob);
+a.download="rbx_backup.json";
+a.click();
+}
+
+function importData(e){
+let file=e.target.files[0];
+let reader=new FileReader();
+reader.onload=function(){
+scripts=JSON.parse(reader.result);
+saveLocal();
+renderScripts();
+};
+reader.readAsText(file);
 }
 </script>
 
