@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RbxVault</title>
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/lua.min.js"></script>
+
+<style>
+body{
+margin:0;
+font-family:Segoe UI,Arial;
+background:linear-gradient(135deg,#0f172a,#1e293b);
+color:white;
+}
+
+nav{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:15px 20px;
+background:rgba(0,0,0,0.3);
+backdrop-filter:blur(10px);
+position:sticky;
+top:0;
+}
+
+.logo{
+font-size:20px;
+font-weight:bold;
+}
+
+.menu-toggle{
+font-size:24px;
+cursor:pointer;
+}
+
+.menu{
+display:none;
+flex-direction:column;
+position:absolute;
+right:20px;
+top:60px;
+background:#1e293b;
+padding:15px;
+border-radius:10px;
+box-shadow:0 0 15px black;
+}
+
+.menu a{
+color:white;
+text-decoration:none;
+margin:5px 0;
+}
+
+.container{
+max-width:900px;
+margin:auto;
+padding:20px;
+}
+
+.card{
+background:#1e293b;
+padding:20px;
+border-radius:15px;
+margin-top:20px;
+box-shadow:0 0 20px rgba(0,0,0,0.4);
+}
+
+input,textarea{
+width:100%;
+padding:10px;
+margin:10px 0;
+border-radius:8px;
+border:none;
+}
+
+textarea{height:200px;}
+
+button{
+padding:8px 12px;
+border:none;
+border-radius:8px;
+background:#3b82f6;
+color:white;
+margin:3px;
+cursor:pointer;
+}
+
+button:hover{opacity:0.8;}
+
+pre{
+background:#0d1117;
+padding:15px;
+border-radius:10px;
+overflow:auto;
+}
+
+.footer{
+text-align:center;
+margin-top:40px;
+opacity:0.6;
+}
+</style>
+</head>
+
+<body>
+
+<nav>
+<div class="logo">RbxVault 🚀</div>
+<div class="menu-toggle" onclick="toggleMenu()">☰</div>
+<div class="menu" id="menu">
+<a href="#" onclick="showHome()">Home</a>
+<a href="#" onclick="showExplore()">Explore</a>
+<a href="#" onclick="showInfo()">Info</a>
+<a href="#" onclick="showCredit()">Credit</a>
+</div>
+</nav>
+
+<div class="container" id="app"></div>
+
+<div class="footer">
+RbxVault © 2026
+</div>
+
+<script>
+let scripts = JSON.parse(localStorage.getItem("rbx_scripts")) || [];
+let views = JSON.parse(localStorage.getItem("rbx_views")) || {};
+
+function saveLocal(){
+localStorage.setItem("rbx_scripts",JSON.stringify(scripts));
+localStorage.setItem("rbx_views",JSON.stringify(views));
+}
+
+function toggleMenu(){
+let m=document.getElementById("menu");
+m.style.display=m.style.display==="flex"?"none":"flex";
+}
+
+function generateId(){
+return Math.random().toString(36).substring(2,10);
+}
+
+/* ROUTER CLEAN URL */
+if(location.pathname.includes("/raw/")){
+let id=location.pathname.split("/raw/")[1];
+let script=scripts.find(s=>s.id===id);
+document.body.innerHTML="";
+document.body.style="background:white;color:black;padding:20px;font-family:monospace;";
+document.body.innerText=script?script.code:"Script not found";
+}else{
+showHome();
+}
+
+function showHome(){
+document.getElementById("app").innerHTML=`
+<div class="card">
+<h2>Upload Script</h2>
+<input id="title" placeholder="Script title">
+<textarea id="code" placeholder="Paste Lua script..."></textarea>
+<button onclick="publish()">Publish</button>
+</div>
+
+<div class="card">
+<h2>Search</h2>
+<input id="search" onkeyup="searchScript()" placeholder="Search script...">
+<div id="list"></div>
+</div>
+`;
+renderScripts();
+}
+
+function showExplore(){
+document.getElementById("app").innerHTML=`
+<div class="card">
+<h2>All Scripts</h2>
+<div id="list"></div>
+</div>`;
+renderScripts();
+}
+
+function showInfo(){
+document.getElementById("app").innerHTML=`
+<div class="card">
+<h2>Info</h2>
+<p>RbxVault adalah platform penyimpanan script Roblox modern.</p>
+<p>Fitur:</p>
+<ul>
+<li>Raw URL</li>
+<li>Copy Script</li>
+<li>Download .lua</li>
+<li>View Counter</li>
+<li>Search</li>
+<li>Mobile Friendly</li>
+</ul>
+</div>`;
+}
+
+function showCredit(){
+document.getElementById("app").innerHTML=`
+<div class="card">
+<h2>Credit</h2>
+<p>Developer: Kamu 😎</p>
+<p>UI Powered by Vanilla JS</p>
+<p>Syntax Highlight by Highlight.js</p>
+</div>`;
+}
+
+function publish(){
+let title=document.getElementById("title").value;
+let code=document.getElementById("code").value;
+if(!title||!code)return alert("Isi semua!");
+
+let id=generateId();
+scripts.push({id,title,code});
+views[id]=0;
+saveLocal();
+showHome();
+}
+
+function renderScripts(){
+let list=document.getElementById("list");
+if(!list)return;
+list.innerHTML="";
+scripts.forEach(s=>{
+list.innerHTML+=`
+<div class="card">
+<h3>${s.title}</h3>
+<p>Views: ${views[s.id]||0}</p>
+
+<button onclick="openRaw('${s.id}')">Raw</button>
+<button onclick="copyCode(\`${s.code}\`)">Copy</button>
+<button onclick="downloadLua(\`${s.code}\`,'${s.title}')">Download</button>
+<button onclick="deleteScript('${s.id}')">Delete</button>
+
+<pre><code class="language-lua">${s.code}</code></pre>
+</div>`;
+});
+hljs.highlightAll();
+}
+
+function openRaw(id){
+views[id]=(views[id]||0)+1;
+saveLocal();
+window.open("/raw/"+id);
+}
+
+function copyCode(code){
+navigator.clipboard.writeText(code);
+alert("Copied!");
+}
+
+function downloadLua(code,title){
+let blob=new Blob([code],{type:"text/plain"});
+let a=document.createElement("a");
+a.href=URL.createObjectURL(blob);
+a.download=title+".lua";
+a.click();
+}
+
+function deleteScript(id){
+scripts=scripts.filter(s=>s.id!==id);
+delete views[id];
+saveLocal();
+renderScripts();
+}
+
+function searchScript(){
+let input=document.getElementById("search").value.toLowerCase();
+document.querySelectorAll(".card").forEach(card=>{
+card.style.display=card.innerText.toLowerCase().includes(input)?"block":"none";
+});
+}
+</script>
+
+</body>
+</html>
